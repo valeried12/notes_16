@@ -1,7 +1,7 @@
 ---
 title: "CLT-based inference - confidence intervals"
-author: ""
-date: ""
+author: "Valerie Deligiannis"
+date: "3/17/21"
 output: html_document
 editor_options: 
   chunk_output_type: console
@@ -121,6 +121,9 @@ ggbase +
 
 What do you notice in the plot?
 
+As the degrees of freedom increases, the distribution becomes a better and 
+better approximation for the standard normal distribution. 
+
 ## Computing a confidence interval for $\mu$
 
 Recall that in our bootstrap simulation-based approach to creating confidence
@@ -180,19 +183,30 @@ cut value from the t-distribution corresponding to the desired confidence level,
 and the standard error is a function of the sample standard deviation and sample 
 size.
 
+```{r}
+ggbase +
+  stat_function(fun = dt, args = list(df = n - 1),
+                color = "blue", size = 1) +
+  xlim(-4,4)
+```
+
+
 $$\bar{x} \pm t^* \times \frac{s}{\sqrt{n}}$$ 
 
 ```{r t_crit_example}
-(t_crit <- qt(p = 0.975, df = n - 1))
+(t_star <- qt(p = 0.975, df = n - 1))
 ```
 
 Why do we have `p = 0.975`?
 
 ```{r ci_example}
-x_bar + c(-1, 1) * t_crit * (s / sqrt(n))
+x_bar + c(-1, 1) * t_star * (s / sqrt(n))
 ```
 
 How do we interpret this?
+
+We are 95% confident that the interval of (3.53,3.83) captures the true
+population mean number of hours people have to relax after work. 
 
 #### Infer
 
@@ -200,8 +214,9 @@ The `infer` package has a function to do these calculations in one
 step. Function `t_test()` is a tidier version of the built-in R function
 `t.test()`.
 
-```{r}
-t_test(gss_2010, response = hrsrelax, conf_level = 0.95)
+```{r t_test}
+t_test(gss_2010, response = hrsrelax, conf_level = 0.95) %>%
+  select(ends_with("ci"))
 ```
 
 For now, focus on the last two variables - `lower_ci` and `upper_ci`. Next
@@ -211,9 +226,9 @@ time we'll discuss the first four in our lecture on hypothesis testing.
 
 What assumptions must we make for this inference procedure to be valid?
 
-1.
+1. Assume we have a random sample.
 
-2.
+2. $n$ should be large, here $n$ = `r n`
 
 ## Practice
 
@@ -225,29 +240,36 @@ since 1964.
     `quakes_40`.
 
 ```{r practice_1}
-
+quakes_40 <- quakes %>%
+  slice_sample(n = 40)
 ```
 
 (2) Compute some summary statistics from `quakes_40`.
 
 ```{r practice_2}
-
+quakes_40 %>%
+  summarize(x_bar = mean(depth), s = sd(depth), n = n())
 ```
 
 (3) Compute a 90% confidence interval for the mean depth of seismic activity
     near Fiji.
     
 ```{r practice_3}
-
+t_test(quakes_40, response = depth, conf_level = 0.90) %>%
+  select(ends_with("ci")) %>% unlist()
 ```
 
 (4) Give an interpretation of your interval.
+
+We are 90% confident that the mean depth for the seismic activity near Fiji since
+1964 is captured by the interval (261.85, 382).
 
 (5) Assume `quakes` consists off all the seismic activity that every occurred
     near Fiji. Does you 90% confidence interval cover the population parameter?
 
 ```{r practice_5}
-
+quakes %>%
+  summarise(mu = mean(depth))
 ```
 
 ## Computing a confidence interval for $p$
