@@ -327,7 +327,17 @@ Redo the above analysis using the confidence interval formula directly, but
 this time create a 90% confidence interval.
 
 ```{r formula_ci90_p}
+p_hat <- gss_2010 %>%
+  count(better) %>%
+  mutate(prop = n / sum(n)) %>%
+  filter(better == 1) %>%
+  pull(prop)
 
+n <- nrow(gss_2010)
+
+z_star <- qnorm(p = 0.95)
+
+p_hat + c(-1,1) * z_star * sqrt(p_hat * (1 - p_hat) / n)
 ```
 
 ## References
